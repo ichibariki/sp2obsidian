@@ -38,7 +38,6 @@ from . import library as sl
 
 DEFAULT_FETCH = sl.TMP_DIR / "spotify_fetch.json"
 DEFAULT_RESEARCH = sl.TMP_DIR / "spotify_research.json"
-JST = sl.JST
 PLACEHOLDERS = {"（まだ保存した曲はありません）", "（Spotifyの取得時に追記）"}
 NO_TRACKS = "（まだ保存した曲はありません）"
 SECTION_TRACKS_RE = re.compile(r"^## お気に入りの曲[ \t]*\n", re.M)
@@ -321,9 +320,10 @@ def load_json(path, required=True):
     return json.loads(p.read_text(encoding="utf-8"))
 
 
-def now_jst():
-    n = datetime.datetime.now(JST)
-    return n.strftime("%Y-%m-%d"), n.strftime("%Y-%m-%dT%H:%M:%S+09:00")
+def now_local():
+    """実行しているコンピューターの地域の時刻で (日付, ISO 8601の日時) を返す。"""
+    n = datetime.datetime.now().astimezone()
+    return n.strftime("%Y-%m-%d"), n.isoformat(timespec="seconds")
 
 
 def cmd_create(args):
@@ -337,7 +337,7 @@ def cmd_create(args):
     noid_names = {sl.norm_name(n["name"]) for n in index["notes"] if not n["spotify_id"]}
     used = {p.name.casefold() for p in adir.glob("*.md")} if adir.is_dir() else set()
     only = set(x for x in (args.only or "").split(",") if x)
-    day, ts = now_jst()
+    day, ts = now_local()
     created, skipped = [], []
     for e in fetch.get("new_artists", []):
         if only and e["id"] not in only:
@@ -377,7 +377,7 @@ def cmd_create(args):
 def cmd_update(args):
     vault, adir = sl.resolve_paths(args)
     fetch = load_json(args.fetch)
-    day, ts = now_jst()
+    day, ts = now_local()
     done = 0
     for e in fetch.get("backfill_artists", []) + fetch.get("updated_artists", []):
         path = (vault / e["note"]).resolve()
@@ -413,7 +413,7 @@ def cmd_update(args):
 
 def cmd_merge_tracks(args):
     _, adir = sl.resolve_paths(args)
-    day, ts = now_jst()
+    day, ts = now_local()
     changed = 0
     for p in sorted(adir.glob("*.md")):
         text = p.read_text(encoding="utf-8").replace("\r\n", "\n")

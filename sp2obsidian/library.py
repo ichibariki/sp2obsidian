@@ -47,7 +47,6 @@ DEFAULT_OUT = TMP_DIR / "spotify_fetch.json"
 SCOPES = "user-follow-read user-library-read user-top-read"
 DEFAULT_REDIRECT_URI = "http://127.0.0.1:8888/callback"
 TERMS = ("short_term", "medium_term", "long_term")
-JST = datetime.timezone(datetime.timedelta(hours=9))
 
 # open.spotify.com/track/<id> または spotify:track:<id> からトラックIDを拾う
 TRACK_ID_RE = re.compile(
@@ -400,7 +399,7 @@ def cmd_fetch(args):
         die("ネットワークエラー: {}".format(e), 3)
 
     result = compute_diff(followed, saved, top, index)
-    result["fetched_at"] = datetime.datetime.now(JST).isoformat(timespec="seconds")
+    result["fetched_at"] = datetime.datetime.now().astimezone().isoformat(timespec="seconds")
     result["top_terms"] = terms
     if args.stdout:
         print(json.dumps(result, ensure_ascii=False, indent=2))
