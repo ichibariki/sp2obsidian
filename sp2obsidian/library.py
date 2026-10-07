@@ -138,7 +138,7 @@ def build_vault_index(vault_root, artists_dir):
                 # 同一アーティストがSpotify上で複数名義に分かれている場合の追加ID（カンマ区切り）
                 "extra_ids": [a.strip() for a in re.split(r"[,、]", fm.get("追加spotify_id", "")) if a.strip()],
                 "status": fm.get("ステータス", ""),
-                "favorite": fm.get("本命", "").lower() == "true",
+                "favorite": fm.get("お気に入りアーティスト", "").lower() == "true",
             })
             track_ids.update(TRACK_ID_RE.findall(text))
     return {"notes": notes, "track_ids": track_ids}

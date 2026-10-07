@@ -242,7 +242,7 @@ def render_note(entry, research, day, ts, has_entry=True):
         day, entry["status"], profile_state(research, has_entry))
     return (
         "---\ntags:\n  - artist\n"
-        "{name}\n{alias}{id}\n{status}\n本命: false\n紹介者:\n"
+        "{name}\n{alias}{id}\n{status}\nお気に入りアーティスト: false\n紹介者:\n"
         "{genre}\ncreated: {day}\nupdated: {ts}\n---\n"
         "## 感想メモ\n\n## プロフィール\n\n{profile}\n\n## お気に入りの曲\n\n{tracks}\n## Changelog\n\n{log}"
     ).format(
