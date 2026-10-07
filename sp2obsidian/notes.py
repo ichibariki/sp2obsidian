@@ -206,7 +206,14 @@ def clean_research(r):
     }
 
 
-def render_profile(entry, research):
+def profile_state(research, has_entry):
+    """プロフィールの状態: 調査結果あり / 調査したが情報なし / 未調査。"""
+    if research["summary"] or research["facts"]:
+        return "調査結果あり"
+    return "調査したが情報なし" if has_entry else "未調査"
+
+
+def render_profile(entry, research, has_entry):
     link_text = (entry["name"] or "").replace("[", "(").replace("]", ")")
     lines = ["- Spotify: [{}]({})".format(link_text, entry["url"])]
     if research["name_ja"] and research["name_ja"] != entry["name"]:
@@ -215,8 +222,11 @@ def render_profile(entry, research):
         lines.append("- 概要: " + research["summary"])
     lines.extend("- " + f for f in research["facts"])
     lines.extend("- 出典: [{}]({})".format(s["title"], s["url"]) for s in research["sources"])
-    if not (research["summary"] or research["facts"]):
-        lines.append("- （ウェブ調査: 確認できる情報が見つかりませんでした）")
+    state = profile_state(research, has_entry)
+    if state == "未調査":
+        lines.append("- （未調査）")
+    elif state == "調査したが情報なし":
+        lines.append("- （調査しましたが、確認できる情報が見つかりませんでした）")
     return "\n".join(lines)
 
 
@@ -225,11 +235,11 @@ def display_name(entry, research):
     return research.get("name_ja") or entry["name"]
 
 
-def render_note(entry, research, day, ts):
+def render_note(entry, research, day, ts, has_entry=True):
+    """has_entry: 調査結果ファイルにこのアーティストの項目があるか（なければプロフィールは「未調査」）。"""
     tracks = render_tracks(entry["new_tracks"]) or NO_TRACKS + "\n"
-    researched = bool(research["summary"] or research["facts"])
     log = "- 作成：{} — Spotifyの取得結果（{}）から作成。プロフィールは{}\n".format(
-        day, entry["status"], "ウェブ調査（出典付き）" if researched else "未調査")
+        day, entry["status"], profile_state(research, has_entry))
     return (
         "---\ntags:\n  - artist\n"
         "{name}\n{alias}{id}\n{status}\n本命: false\n紹介者:\n"
@@ -241,7 +251,7 @@ def render_note(entry, research, day, ts):
         id=kv("spotify_id", entry["id"]),
         status=kv("ステータス", entry["status"]),
         genre=kv("ジャンル", yaml_scalar(", ".join(research["genres"]))), day=day, ts=ts,
-        profile=render_profile(entry, research), tracks=tracks, log=log)
+        profile=render_profile(entry, research, has_entry), tracks=tracks, log=log)
 
 
 # ---------------------------------------------------------------- 既存ノートの部分更新
@@ -357,7 +367,7 @@ def cmd_create(args):
         if fname.casefold() in used:
             fname = "{} ({}).md".format(safe_filename(shown), e["id"][:4])
         used.add(fname.casefold())
-        text = render_note(e, r, day, ts)
+        text = render_note(e, r, day, ts, has_entry=e["id"] in research)
         if not args.dry_run:
             adir.mkdir(parents=True, exist_ok=True)
             (adir / fname).write_text(text, encoding="utf-8")
