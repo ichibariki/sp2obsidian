@@ -174,6 +174,13 @@ Spotify の [Developer Terms](https://developer.spotify.com/terms) と [Develope
 - 初回の認証はブラウザと `127.0.0.1` を使うため、**自分のコンピューターで実行**してください。クラウド上の環境やリモートのサーバーでは、認証できないことがあります。
 - Windows・Linux は未確認です。
 
+## Issue・要望について
+
+不具合の報告と機能の要望は、[Issue](https://github.com/ichibariki/sp2obsidian/issues) で受け付けています。
+
+- 個人が趣味で作っているツールのため、**返答や対応の時期はお約束できません**。要望に対応するかどうかは作者が判断します。
+- **Issue は誰でも見られます。** Client ID・トークン・`.env` の中身・取得したデータは貼らないでください。エラーに含まれるホームのパスやアーティスト名も、必要なければ伏せてください。
+
 ## テスト（開発者向け）
 
 架空のデータだけを使うテストです。Spotify には接続しません。追加のインストールは不要です。
@@ -199,6 +206,7 @@ Spotify は Spotify AB の商標です。
 - **Local only.** Data goes from the Spotify Web API (read-only scopes) to a local JSON file and then to your notes. Nothing is sent anywhere else. Do not share `.env`, `.spotify_cache`, or `tmp/`.
 - **No AI/ML.** Do not use data obtained from Spotify to train or feed AI/ML models ([Spotify Developer Policy](https://developer.spotify.com/policy)). sp2obsidian itself does not send data to any AI.
 - **Safe writes.** Every write command supports `--dry-run`, and your own text in notes (e.g. the memo section) is never overwritten.
+- **Issues.** Bug reports and ideas are welcome via [Issues](https://github.com/ichibariki/sp2obsidian/issues). This is a personal hobby project, so responses are not guaranteed. Issues are public — never paste your Client ID, tokens, or fetched data.
 
 ```bash
 python3 -m venv .venv && .venv/bin/pip install -r requirements.txt

@@ -1,0 +1,60 @@
+name: 不具合の報告 / Bug report
+description: 思ったとおりに動かないときの報告 / Something does not work as expected
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        報告ありがとうございます。**Issue は誰でも見られます。** 書き込む前に、次の注意を読んでください。
+        Thank you for the report. **Issues are public.** Please read the notes below before posting.
+
+        - `.env` の中身、Client ID、トークン（`.spotify_cache`）は**絶対に貼らないでください**。
+          Never paste the contents of `.env`, your Client ID, or tokens (`.spotify_cache`).
+        - エラーに含まれるホームのパス（例: `/Users/あなたの名前/...`）や、アーティスト名・曲名は、必要なければ伏せてください（例: `/Users/xxx/...`、`Artist A`）。
+          Mask your home path and artist/track names if they are not needed.
+        - `tmp/spotify_fetch.json` など、取得したデータのファイルは添付しないでください。
+          Do not attach fetched data such as `tmp/spotify_fetch.json`.
+
+        個人が趣味で作っているツールのため、返答や対応の時期はお約束できません。
+        This is a personal hobby project; responses and fixes are not guaranteed.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: 何が起きたか / What happened
+      description: 思っていた動きと、実際の動き / What you expected and what actually happened
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: 再現する手順 / Steps to reproduce
+      description: 実行したコマンドなど（オプションも含めて） / Commands you ran, including options
+      placeholder: |
+        1. .venv/bin/python -m sp2obsidian.library fetch
+        2. .venv/bin/python -m sp2obsidian.notes create --dry-run
+    validations:
+      required: true
+  - type: textarea
+    id: error
+    attributes:
+      label: エラーメッセージ / Error message
+      description: 秘密情報・ホームのパス・アーティスト名は伏せてください / Mask secrets, home paths, and artist names
+      render: text
+  - type: input
+    id: version
+    attributes:
+      label: sp2obsidian のバージョン / Version
+      placeholder: "v0.1.0"
+  - type: input
+    id: environment
+    attributes:
+      label: 環境 / Environment
+      description: OS と Python のバージョン / OS and Python version
+      placeholder: "macOS 15, Python 3.9.6"
+  - type: checkboxes
+    id: privacy
+    attributes:
+      label: 確認 / Confirmation
+      options:
+        - label: Client ID・トークン・`.env` の中身・取得したデータを貼っていません / I have not included my Client ID, tokens, `.env` contents, or fetched data
+          required: true
