@@ -8,12 +8,14 @@ Vault内の保存フォルダ（既定: <Vault>/Artists/）のノートを作成
   python -m sp2obsidian.notes create --dry-run
   python -m sp2obsidian.notes update --dry-run
   python -m sp2obsidian.notes merge-tracks --dry-run
+  python -m sp2obsidian.notes candidates
 
   create : fetchの new_artists から新規ノートを作る（既存ノートは上書きしない）
   update : fetchの backfill_artists / updated_artists の新曲・ステータスを既存ノートに反映する
   merge-tracks : 既存ノートの保存曲のうち、曲名が同じものを1つの見出しにまとめ直す（何度実行しても同じ結果）
   ※ 同じ曲がアルバム違い・トラックID違いで保存されることがあるため、曲名が同じ曲は1つの見出しにまとめ、
      Spotifyのリンクを並べる（create / update もこのルールで書く）
+  candidates : よく聴く曲ランキングから、お気に入りアーティストの候補を表示する（ノートは書き換えない）
 
 入力（既定: <作業フォルダ>/tmp/ 配下。Git管理外）
   spotify_fetch.json    python -m sp2obsidian.library fetch の出力
@@ -439,6 +441,50 @@ def cmd_merge_tracks(args):
     print("まとめ直し: {}件".format(changed))
 
 
+TERM_LABELS = {"short_term": "約4週間", "medium_term": "約6か月", "long_term": "約1年"}
+
+
+def find_candidates(top_tracks, favorites, min_tracks=2):
+    """お気に入りアーティストの候補を選ぶ（純粋関数）。
+
+    よく聴く曲ランキングのうち、保存済みの曲で、ノートがあり、まだお気に入りアーティストでない
+    アーティストを数え、ランキングに入っている曲が min_tracks 曲以上のものを返す。
+    favorites: ノートのパス → お気に入りアーティストか（実行時点のノートの値）
+    並び順: 曲数の多い順 → 最高順位の高い順。
+    """
+    by_note = {}
+    for t in top_tracks:
+        note = t.get("artist_note")
+        if not (t.get("saved") and note) or favorites.get(note, t.get("artist_favorite")):
+            continue
+        c = by_note.setdefault(note, {"note": note, "tracks": {}, "best": {}})
+        c["tracks"].setdefault(t["id"], t.get("name"))
+        term, rank = t.get("term"), t.get("rank")
+        if term and rank and (term not in c["best"] or rank < c["best"][term]):
+            c["best"][term] = rank
+    out = [c for c in by_note.values() if len(c["tracks"]) >= min_tracks]
+    out.sort(key=lambda c: (-len(c["tracks"]), min(c["best"].values() or [10 ** 6]), c["note"]))
+    return out
+
+
+def cmd_candidates(args):
+    vault, adir = sl.resolve_paths(args)
+    fetch = load_json(args.fetch)
+    index = sl.build_vault_index(vault, adir)
+    favorites = {n["path"]: n["favorite"] for n in index["notes"]}
+    found = find_candidates(fetch.get("top_tracks", []), favorites, args.min_tracks)
+    terms = "・".join(TERM_LABELS.get(t, t) for t in fetch.get("top_terms", []))
+    print("お気に入りアーティストの候補: {}件（ランキング: {}、保存済みの曲が{}曲以上）".format(
+        len(found), terms or "不明", args.min_tracks))
+    for c in found[:args.limit]:
+        best = "、".join("{}{}位".format(TERM_LABELS.get(t, t), r) for t, r in sorted(c["best"].items(), key=lambda x: x[1]))
+        print("  - {}（{}曲 / 最高: {}）".format(Path(c["note"]).stem, len(c["tracks"]), best))
+        for name in list(c["tracks"].values())[:args.show_tracks]:
+            print("      ・{}".format(name))
+    if found:
+        print("お気に入りにするかはご自身で決めてください。ノートの `お気に入りアーティスト: true` で設定します（このコマンドは書き換えません）。")
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(description="Spotifyの取得結果と調査結果からアーティストノートを作成・更新する")
     sub = ap.add_subparsers(dest="cmd", required=True)
@@ -454,8 +500,15 @@ def main(argv=None):
     p = sub.add_parser("merge-tracks", help="既存ノートの保存曲を曲名でまとめ直す")
     sl.add_path_args(p)
     p.add_argument("--dry-run", action="store_true", help="書き込まずに計画だけ表示")
+    p = sub.add_parser("candidates", help="お気に入りアーティストの候補を表示（ノートは書き換えない）")
+    sl.add_path_args(p)
+    p.add_argument("--fetch", default=str(DEFAULT_FETCH), help="fetchの出力JSON")
+    p.add_argument("--min-tracks", type=int, default=2, help="ランキングに入っている保存済みの曲が何曲以上で候補にするか（既定: 2）")
+    p.add_argument("--limit", type=int, default=20, help="表示する候補の最大数（既定: 20）")
+    p.add_argument("--show-tracks", type=int, default=3, help="候補ごとに表示する曲の数（既定: 3。0で非表示）")
     args = ap.parse_args(argv)
-    {"create": cmd_create, "update": cmd_update, "merge-tracks": cmd_merge_tracks}[args.cmd](args)
+    {"create": cmd_create, "update": cmd_update, "merge-tracks": cmd_merge_tracks,
+     "candidates": cmd_candidates}[args.cmd](args)
 
 
 if __name__ == "__main__":
