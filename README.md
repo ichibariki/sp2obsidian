@@ -174,6 +174,14 @@ Spotify の [Developer Terms](https://developer.spotify.com/terms) と [Develope
 - 初回の認証はブラウザと `127.0.0.1` を使うため、**自分のコンピューターで実行**してください。クラウド上の環境やリモートのサーバーでは、認証できないことがあります。
 - Windows・Linux は未確認です。
 
+## テスト（開発者向け）
+
+架空のデータだけを使うテストです。Spotify には接続しません。追加のインストールは不要です。
+
+```bash
+.venv/bin/python -m unittest
+```
+
 ## ライセンス
 
 [MIT License](LICENSE)
