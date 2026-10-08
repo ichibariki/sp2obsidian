@@ -79,8 +79,8 @@ updated: 2026-10-08T09:00:00+09:00
 .venv/bin/python -m sp2obsidian.library fetch
 
 # 2. 新しいアーティストのノートを作る（まず --dry-run で確認）
-.venv/bin/python -m sp2obsidian.notes create --allow-unresearched --dry-run
-.venv/bin/python -m sp2obsidian.notes create --allow-unresearched
+.venv/bin/python -m sp2obsidian.notes create --dry-run
+.venv/bin/python -m sp2obsidian.notes create
 
 # 3. 既存のノートに、新しく保存した曲とステータスの変化を反映する
 .venv/bin/python -m sp2obsidian.notes update --dry-run
@@ -114,9 +114,13 @@ updated: 2026-10-08T09:00:00+09:00
 
 同じ曲でも、アルバム・シングル・リマスターごとに Spotify では別の曲として扱われます。sp2obsidian は、1 つのノートの中で**曲名が同じものを 1 つの見出しにまとめ**、Spotify のリンクを並べます。
 
-### プロフィール欄と調査結果ファイル（任意）
+### プロフィール欄
 
-ノートを作るときに、アーティストの説明をプロフィール欄に入れることができます。`tmp/spotify_research.json` に、Spotify のアーティスト ID ごとに次の形で書いておきます。
+新しく作るノートのプロフィール欄には、Spotify のリンクと「（未調査）」が入ります。アーティストの説明は、ノートを作った後に自由に書き足してください。`update` はプロフィール欄を書き換えないので、書いた内容は消えません。
+
+#### 上級者向け: 調査結果ファイル（任意）
+
+ノートを作るときに、あらかじめ用意した説明をプロフィール欄に入れることもできます。**ほとんどの人には不要です。** 使う場合は、`tmp/spotify_research.json` に、Spotify のアーティスト ID ごとに次の形で書いておきます。
 
 ```json
 {
@@ -130,9 +134,10 @@ updated: 2026-10-08T09:00:00+09:00
 }
 ```
 
-- このファイルがなくても使えます。その場合は `create` に `--allow-unresearched` を付けます。プロフィール欄は「（未調査）」になります。
-- `--allow-unresearched` を付けない場合、調査結果のないアーティストのノートは作りません。
-- **このファイルは自分で用意してください。** 下の「Spotify のデータと AI について」も読んでください。
+- `name_ja` を書くと、ノート名がその表記になります（Spotify での表記は `別名` に入ります）。Spotify がローマ字で表記しているアーティストを日本語名にしたいときに使います。
+- ファイルに項目があるアーティストだけ、説明が入ります。項目がないアーティストは「（未調査）」です。項目はあるが中身が空なら「（調査しましたが、確認できる情報が見つかりませんでした）」と表示します。
+- `create` に `--require-research` を付けると、項目がないアーティストのノートは作りません（調べてから作りたい人向け）。
+- **このファイルは自分で用意してください。** Spotify から取ったアーティスト名を AI に渡して作らせないでください。下の「Spotify のデータと AI について」も読んでください。
 
 ## データの流れと保存されるもの
 
@@ -192,7 +197,7 @@ python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
 cp .env.example .env   # set SPOTIFY_CLIENT_ID and SP2OBSIDIAN_VAULT
 .venv/bin/python -m sp2obsidian.library auth
 .venv/bin/python -m sp2obsidian.library fetch
-.venv/bin/python -m sp2obsidian.notes create --allow-unresearched --dry-run
+.venv/bin/python -m sp2obsidian.notes create --dry-run
 ```
 
 License: MIT. Spotify is a trademark of Spotify AB.

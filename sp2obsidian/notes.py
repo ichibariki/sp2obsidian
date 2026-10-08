@@ -28,7 +28,8 @@ Vault内の保存フォルダ（既定: <Vault>/Artists/）のノートを作成
 Vault・保存フォルダの決め方は sp2obsidian.library と同じ（引数 → 環境変数 → .env → 既定値）
 守ること:
   - 既存ノートの「感想メモ」など、ユーザーが書いた部分には触れない（曲の追記は「お気に入りの曲」節のみ）
-  - 調査結果がないアーティストは、--allow-unresearched を付けない限りノートを作らない
+  - 調査結果ファイルは任意。調査結果がないアーティストもノートを作り、プロフィールは「（未調査）」にする
+    （--require-research を付けると、調査結果がないアーティストのノートは作らない）
 """
 import argparse
 import datetime
@@ -360,7 +361,7 @@ def cmd_create(args):
         if sl.norm_name(e["name"]) in noid_names:
             skipped.append((e["name"], "同名でID未設定のノートがある（手動でIDを補完する）"))
             continue
-        if e["id"] not in research and not args.allow_unresearched:
+        if e["id"] not in research and args.require_research:
             skipped.append((e["name"], "調査結果がない"))
             continue
         r = clean_research(research.get(e["id"]))
@@ -496,7 +497,8 @@ def main(argv=None):
         if name == "create":
             p.add_argument("--research", default=str(DEFAULT_RESEARCH), help="調査結果JSON")
             p.add_argument("--only", help="対象のSpotifyアーティストID（カンマ区切り）")
-            p.add_argument("--allow-unresearched", action="store_true", help="調査結果がなくてもノートを作る")
+            p.add_argument("--require-research", action="store_true",
+                           help="調査結果ファイルに項目がないアーティストのノートは作らない（既定では作り、プロフィールは「未調査」）")
     p = sub.add_parser("merge-tracks", help="既存ノートの保存曲を曲名でまとめ直す")
     sl.add_path_args(p)
     p.add_argument("--dry-run", action="store_true", help="書き込まずに計画だけ表示")

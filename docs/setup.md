@@ -88,7 +88,7 @@ cp .env.example .env
 
 ```bash
 .venv/bin/python -m sp2obsidian.library fetch
-.venv/bin/python -m sp2obsidian.notes create --allow-unresearched --dry-run
+.venv/bin/python -m sp2obsidian.notes create --dry-run
 ```
 
 1 つ目で `tmp/spotify_fetch.json` に取得結果が保存され、件数が表示されます。2 つ目で、作られる予定のノートが表示されます（`--dry-run` なので、まだ何も書き込みません）。
