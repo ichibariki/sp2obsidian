@@ -324,13 +324,18 @@ def append_changelog(text, line):
 
 # ---------------------------------------------------------------- コマンド
 
-def load_json(path, required=True):
+def load_json(path, required=True, hint=""):
     p = Path(path).expanduser()
     if not p.exists():
         if required:
-            sl.die("ファイルがありません: {}".format(p), 2)
+            sl.die("ファイルがありません: {}{}".format(p, "\n" + hint if hint else ""), 2)
         return {}
     return json.loads(p.read_text(encoding="utf-8"))
+
+
+def load_fetch(path):
+    """fetch の出力を読む。なければ、先に fetch を実行するよう案内する。"""
+    return load_json(path, hint="先に `python -m sp2obsidian.library fetch` を実行して、Spotifyから取得してください。")
 
 
 def now_local():
@@ -341,7 +346,7 @@ def now_local():
 
 def cmd_create(args):
     vault, adir = sl.resolve_paths(args)
-    fetch = load_json(args.fetch)
+    fetch = load_fetch(args.fetch)
     research = load_json(args.research, required=False)
     index = sl.build_vault_index(vault, adir)
     known_ids = {n["spotify_id"] for n in index["notes"] if n["spotify_id"]}
@@ -389,7 +394,7 @@ def cmd_create(args):
 
 def cmd_update(args):
     vault, adir = sl.resolve_paths(args)
-    fetch = load_json(args.fetch)
+    fetch = load_fetch(args.fetch)
     day, ts = now_local()
     done = 0
     for e in fetch.get("backfill_artists", []) + fetch.get("updated_artists", []):
@@ -470,7 +475,7 @@ def find_candidates(top_tracks, favorites, min_tracks=2):
 
 def cmd_candidates(args):
     vault, adir = sl.resolve_paths(args)
-    fetch = load_json(args.fetch)
+    fetch = load_fetch(args.fetch)
     index = sl.build_vault_index(vault, adir)
     favorites = {n["path"]: n["favorite"] for n in index["notes"]}
     found = find_candidates(fetch.get("top_tracks", []), favorites, args.min_tracks)

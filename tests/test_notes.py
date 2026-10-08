@@ -1,4 +1,6 @@
 """sp2obsidian.notes のテスト（架空データの一時Vaultで実行する）。"""
+import contextlib
+import io
 import unittest
 
 from sp2obsidian import notes as sn
@@ -209,6 +211,14 @@ class CommandTest(VaultTestCase):
         merged = path.read_text(encoding="utf-8")
         self.assertIn("まとめ直し: 0件", self.run_main(sn.main, ["merge-tracks", "--vault", str(self.vault)]))
         self.assertEqual(path.read_text(encoding="utf-8"), merged)
+
+    def test_missing_fetch_explains_next_step(self):
+        for cmd in ("create", "update", "candidates"):
+            err = io.StringIO()
+            with self.subTest(cmd=cmd), contextlib.redirect_stderr(err), self.assertRaises(SystemExit) as cm:
+                sn.main([cmd, "--vault", str(self.vault), "--fetch", str(self.home / "none.json")])
+            self.assertEqual(cm.exception.code, 2)
+            self.assertIn("先に `python -m sp2obsidian.library fetch` を実行", err.getvalue())
 
     def test_candidates_uses_current_note_value(self):
         self.write_note("Band.md", note_text("Band", sid(1), favorite="true"))
