@@ -6,4 +6,4 @@ import sys
 
 sys.dont_write_bytecode = True  # __pycache__ を同期フォルダ（iCloud 等）に作らない
 
-__version__ = "0.1.0.dev0"
+__version__ = "0.1.0"
